@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -12,6 +13,7 @@ import (
 	"github.com/krnveersharma/golang-jwt-project/helpers"
 	"github.com/krnveersharma/golang-jwt-project/models"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -50,6 +52,20 @@ func SignUp() gin.HandlerFunc {
 		if count > 0 {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "this email or phone number is used"})
 		}
+		user.CreatedAt, _ = time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
+		user.UpdatedAt, _ = time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
+		user.ID = primitive.NewObjectID()
+		user.UserId = user.ID.Hex()
+		token, refreshToken, _ := helpers.GenerateAllTokens(*user.Email, *user.FirstName, *user.LastName, *&user.UserType, *user.UserId)
+		user.Token = &token
+		user.RefreshToken = &refreshToken
+		resultInsertionNumber, insertErr := userCollection.InsertOne(ctx, user)
+		if insertErr != nil {
+			msg := fmt.Sprintf("User item was not created")
+			c.JSON(http.StatusInternalServerError, gin.H{"error": msg})
+		}
+		defer cancel()
+		c.JSON(http.StatusOK, resultInsertionNumber)
 	}
 }
 
