@@ -68,7 +68,7 @@ func SignUp() gin.HandlerFunc {
 		c.JSON(http.StatusOK, resultInsertionNumber)
 	}
 }
-
+cdjchsdhjghjjh
 func Login()
 
 func GetUsers()
